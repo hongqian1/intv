@@ -419,7 +419,7 @@ All nodes along children pointers from root to leaf nodes form a path in a binar
 #define TARGET_SUM 22 // Add this as an argument of the function. 
 void printPath(Node * root, int sum, vector<int> &path)
 {
-    if (root=NULL)
+    if (root==NULL)
         return;
 
     sum += root->value;

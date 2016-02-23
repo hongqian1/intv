@@ -184,6 +184,7 @@ char * my_strstr(char * str, const char * sub)
 
         ++str;
     }
+    return nullptr;
 }
 
 void removeSubstr(char * str, const char* sub)
