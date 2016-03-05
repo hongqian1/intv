@@ -15,6 +15,7 @@
 #include <unordered_set>
 #include <set>
 #include <queue>
+#include <list>
 
 #include "binarytree.h"
 
@@ -503,6 +504,36 @@ int findKthLargestWrapper(Node * root, int K)
     return result;
 }
 
+// create a binary tree from an array integers with lintcode style.
+// But use -999 as null. It means no "-999" in the tree. 
+TreeNode * createTree(vector<int> nums)
+{
+    if (nums.empty() || nums[0] == -999)
+        return nullptr;
+
+    TreeNode * root = new TreeNode(nums[0]);
+    list<TreeNode *> tasks;
+    tasks.push_back(root);
+    int i=1;
+    while (i<nums.size()) {
+        TreeNode *node = tasks.front();
+        tasks.pop_front();
+        
+        if (nums[i] != -999) {
+            node->left = new TreeNode(nums[i]);
+            tasks.push_back(node->left);
+        }
+
+        ++i;
+        if (i<nums.size() && nums[i] != -999) {
+            node->right = new TreeNode(nums[i]);
+            tasks.push_back(node->right);
+        }
+        ++i;
+    }
+    return root;
+}
+
 // Construct Binary Tree from Preorder and Inorder Traversal
 int find(vector<int> A, int start, int end, int value) {
     for (int i=start; i<=end; ++i) {
@@ -683,11 +714,9 @@ int findLargestBST(TreeNode * root) {
 
 int main()
 {
-    // Test binary tree. Need use the same approach as Lintcode to build a binary tree.
-    // First build a binary tree from inorder and postorder arrays.
-    vector<int> preorder = {10, 5, 1, 8, 15, 7};
-    vector<int> inorder = {1, 5, 8, 10, 15, 7};
-    TreeNode * root = buildTree(preorder, inorder);
+    // Create a binary tree, but -999 is nullptr in the binary tree. 
+    vector<int> nums = {10, 7, 3, 2, -999, 5, -999, -999, 6};
+    TreeNode * root = createTree(nums);
     cout<<"findLargestBST(root) = " << findLargestBST(root) <<endl;
         
     return 0;
