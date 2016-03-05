@@ -18,6 +18,11 @@ test3:	test3.o
 test3.o:	test3.cpp test3.h
 		g++ $(INCLUDE_DIRS) $(CFLAGS) -c test3.cpp 
 
+test4:	test4.o
+		g++ -o test4 test4.o -lpthread
+test4.o:	test4.cpp test4.h
+		g++ $(INCLUDE_DIRS) $(CFLAGS) -c test4.cpp 
+
 binarytree:	binarytree.o
 		g++ -o binarytree binarytree.o -lpthread
 binarytree.o:	binarytree.cpp binarytree.h
@@ -44,5 +49,5 @@ hashheaptrie.o:	hashheaptrie.cpp
 		g++ $(INCLUDE_DIRS) $(CFLAGS) -c hashheaptrie.cpp 
 
 clean:		
-		rm -f test test.exe test.o test2 test2.exe test2.o test3 test3.exe test3.o binarytree binarytree.exe binarytree.o linkedlist linkedlist.exe linkedlist.o dp dp.exe dp.o queuestack queuestack.exe queuestack.o hashheaptrie hashheaptrie.exe hashheaptrie.o 
+		rm -f test test.exe test.o test2 test2.exe test2.o test3 test3.exe test3.o test4 test4.exe test4.o binarytree binarytree.exe binarytree.o linkedlist linkedlist.exe linkedlist.o dp dp.exe dp.o queuestack queuestack.exe queuestack.o hashheaptrie hashheaptrie.exe hashheaptrie.o 
 

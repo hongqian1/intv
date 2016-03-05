@@ -503,6 +503,38 @@ int findKthLargestWrapper(Node * root, int K)
     return result;
 }
 
+// Construct Binary Tree from Preorder and Inorder Traversal
+int find(vector<int> A, int start, int end, int value) {
+    for (int i=start; i<=end; ++i) {
+        if (A[i] == value)
+            return i;
+    }
+    return -1;
+}
+
+TreeNode * treeBuilder(vector<int> & preorder, int start1, int end1, vector<int> & inorder, int start2, int end2) {
+    if (start1 > end1)
+        return nullptr;
+
+    TreeNode * root = new TreeNode(preorder[start1]);
+    int mid = find(inorder, start2, end2, preorder[start1]);
+    if (mid == -1)
+        return nullptr;
+        
+    root->left = treeBuilder(preorder, start1+1, start1+mid-start2, inorder, start2, mid-1);
+    root->right = treeBuilder(preorder, start1+mid-start2+1, end1, inorder, mid+1, end2);
+    return root;
+}
+    
+TreeNode *buildTree(vector<int> &preorder, vector<int> &inorder) {
+    // write your code here
+    if (preorder.empty() || inorder.empty() || preorder.size() != inorder.size())
+        return nullptr;
+        
+    // Use D&Q, top to bottom recursion, similar to quick sort. 
+    return treeBuilder(preorder, 0, preorder.size()-1, inorder, 0, inorder.size()-1);
+}
+    
 /* Construct Binary Tree from Inorder and Postorder Traversal
   Given inorder and postorder traversal of a tree, construct the binary tree.
 
@@ -518,7 +550,7 @@ return a tree
  /  \
 1    3
 */
-TreeNode *buildTree(vector<int> &inorder, vector<int> &postorder) {
+TreeNode *buildTree2(vector<int> &inorder, vector<int> &postorder) {
     if (inorder.empty()||postorder.empty()||inorder.size() != postorder.size()) {
         return NULL;
     }
@@ -608,7 +640,55 @@ TreeNode* removeNode(TreeNode* root, int value) {
     return root;
 }
 
+/*
+  Find the largest binary search tree in a binary tree. Largest means max nodes.
+  Return the number of nodes. 
+ */
+// Use a struct to store all the return values over 2.
+// Use pair or vector for 2 return values
+struct Values{
+    bool isBST;
+    bool isNull; // It is better to use a bool to indicate null. 
+    int minValue;
+    int maxValue;
+    int maxNodes;
+
+    Values(bool bst, bool isn, int minv, int maxv, int maxn) : isBST(bst), isNull(isn), minValue(minv), maxValue(maxv), maxNodes(maxn) {}
+};
+
+// recursion function. 
+Values searchLargestBST(TreeNode * root)
+{
+    // Use post order traversal of DFS
+    if (root == nullptr) {
+        return Values(true, true, 0, 0, 0);
+    }
+    
+    Values left = searchLargestBST(root->left);
+    Values right = searchLargestBST(root->right);
+
+    // It is better to use bool to indicate null instead of using int max and min. 
+    if (left.isBST && right.isBST) {
+        if ((left.isNull || root->val > left.maxValue) &&
+            (right.isNull || root->val < right.minValue))
+            return Values(true, false, left.isNull?root->val:left.minValue, right.isNull?root->val:right.maxValue, left.maxNodes + right.maxNodes + 1);
+    }
+
+    return Values(false, false, 0, 0, max(left.maxNodes, right.maxNodes));
+}
+
+int findLargestBST(TreeNode * root) {
+    return searchLargestBST(root).maxNodes;
+}
+
 int main()
 {
+    // Test binary tree. Need use the same approach as Lintcode to build a binary tree.
+    // First build a binary tree from inorder and postorder arrays.
+    vector<int> preorder = {10, 5, 1, 8, 15, 7};
+    vector<int> inorder = {1, 5, 8, 10, 15, 7};
+    TreeNode * root = buildTree(preorder, inorder);
+    cout<<"findLargestBST(root) = " << findLargestBST(root) <<endl;
+        
     return 0;
 }
