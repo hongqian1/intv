@@ -21,6 +21,9 @@ RwLock::~RwLock()
     pthread_cond_destroy(&rw_cond);
 }
 
+// What if we want to give writers higher priority.
+// If there are many readers, writers may wait forever...
+// Add nwriters counter. 
 void RwLock::getReadLock()
 {
     pthread_mutex_lock(&rw_mutex);
