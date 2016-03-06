@@ -1936,6 +1936,11 @@ vector<vector<string>> findAllPairs2(const unordered_set<string> & dict) {
     return result;
 }
 
+    long long permutationIndex(vector<int>& A) {
+        // Write your code here
+        
+    }
+
 int main()
 {
     const string source = "abdopsdkdppb";

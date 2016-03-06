@@ -1,7 +1,7 @@
 INCLUDE_DIRS = 
 CFLAGS = -g -std=c++11
 
-all:	test test2 test3 binarytree linkedlist dp queuestack hashheaptrie
+all:	test test2 test3 binarytree linkedlist dp queuestack hashheaptrie threads
 
 test: 	test.o
 		g++ -o test test.o -lpthread
@@ -48,6 +48,11 @@ hashheaptrie:	hashheaptrie.o
 hashheaptrie.o:	hashheaptrie.cpp 
 		g++ $(INCLUDE_DIRS) $(CFLAGS) -c hashheaptrie.cpp 
 
+threads:	threads.o
+		g++ -o threads threads.o -lpthread
+threads.o:	threads.cpp 
+		g++ $(INCLUDE_DIRS) $(CFLAGS) -c threads.cpp 
+
 clean:		
-		rm -f test test.exe test.o test2 test2.exe test2.o test3 test3.exe test3.o test4 test4.exe test4.o binarytree binarytree.exe binarytree.o linkedlist linkedlist.exe linkedlist.o dp dp.exe dp.o queuestack queuestack.exe queuestack.o hashheaptrie hashheaptrie.exe hashheaptrie.o 
+		rm -f test test.exe test.o test2 test2.exe test2.o test3 test3.exe test3.o test4 test4.exe test4.o binarytree binarytree.exe binarytree.o linkedlist linkedlist.exe linkedlist.o dp dp.exe dp.o queuestack queuestack.exe queuestack.o hashheaptrie hashheaptrie.exe hashheaptrie.o threads threads.exe threads.o 
 
