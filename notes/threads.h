@@ -14,6 +14,7 @@ private:
     // if nreaders >= 0, indicates #readers.
     // If nreaders<0, there is a write lock. 
     int nreaders;
+    int nwaitwriters;
     pthread_mutex_t rw_mutex;
     pthread_cond_t rw_cond;
 };

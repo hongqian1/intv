@@ -11,6 +11,7 @@
 RwLock::RwLock()
 {
     nreaders = 0;
+    nwaitwriters = 0;
     pthread_mutex_init(&rw_mutex, nullptr);
     pthread_cond_init(&rw_cond, nullptr);
 }
@@ -23,11 +24,11 @@ RwLock::~RwLock()
 
 // What if we want to give writers higher priority.
 // If there are many readers, writers may wait forever...
-// Add nwriters counter. 
+// Add nwaitwriters counter. 
 void RwLock::getReadLock()
 {
     pthread_mutex_lock(&rw_mutex);
-    while (-1==nreaders) {
+    while (nreaders == -1 || nwaitwriters > 0) {
         pthread_cond_wait(&rw_cond, &rw_mutex);
     }
 
@@ -38,11 +39,13 @@ void RwLock::getReadLock()
 void RwLock::getWriteLock()
 {
     pthread_mutex_lock(&rw_mutex);
+    nwaitwriters++;
     while (0 != nreaders) {
         pthread_cond_wait(&rw_cond, &rw_mutex);
     }
 
     nreaders = -1;
+    nwaitwriters--;
     pthread_mutex_unlock(&rw_mutex);
 }
 
@@ -77,8 +80,10 @@ void* reader(void * arg)
     cout << "Obtaining read lock.\n";
     rwlock.getReadLock();
     cout << "Obtained read lock.\n";
+
     sleep(5);
-    cout<<"Releasing read lock.\n";
+    
+//    cout<<"Releasing read lock.\n";
     rwlock.unLock();
     cout<<"Released read lock.\n";
 }
@@ -88,8 +93,10 @@ void* writer(void * arg)
     cout<<"Obtaining write lock.\n";
     rwlock.getWriteLock();
     cout<<"Obtained write lock.\n";
+
     sleep(5);
-    cout<<"releasing write lock.\n";
+    
+//    cout<<"releasing write lock.\n";
     rwlock.unLock();
     cout<<"Reelased write lock.\n";
 }
@@ -104,17 +111,17 @@ int main(int argc, char ** argv)
         exit(1);
     }
 
-    res=pthread_create(&r2, nullptr, reader, nullptr);
-    if (res != 0) {
-        cout<<"Failed to start thread.\n";
-        exit(2);
-    }
-
     sleep(1);
     res = pthread_create(&w1, nullptr, writer, nullptr);
     if (res != 0) {
         cout<<"Failed to start thread.\n";
         exit(3);
+    }
+
+    res=pthread_create(&r2, nullptr, reader, nullptr);
+    if (res != 0) {
+        cout<<"Failed to start thread.\n";
+        exit(2);
     }
 
     res=pthread_create(&w2, nullptr, writer, nullptr);
