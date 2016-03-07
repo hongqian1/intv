@@ -6,6 +6,7 @@ public:
     RwLock();
     ~RwLock();
 
+    // Three main functions. 
     void getReadLock();
     void getWriteLock();
     void unLock();
@@ -13,8 +14,8 @@ public:
 private:
     // if nreaders >= 0, indicates #readers.
     // If nreaders<0, there is a write lock. 
-    int nreaders;
-    int nwaitwriters;
-    pthread_mutex_t rw_mutex;
-    pthread_cond_t rw_cond;
+    int nReaders;
+    int nWaitingWriters;
+    pthread_mutex_t mutex;
+    pthread_cond_t cond;
 };

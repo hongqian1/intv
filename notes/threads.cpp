@@ -9,65 +9,61 @@
 #include "threads.h"
 
 RwLock::RwLock()
+        : nReaders(0)
+        , nWaitingWriters(0)
+        , mutex()
+        , cond()
 {
-    nreaders = 0;
-    nwaitwriters = 0;
-    pthread_mutex_init(&rw_mutex, nullptr);
-    pthread_cond_init(&rw_cond, nullptr);
 }
 
 RwLock::~RwLock()
 {
-    pthread_mutex_destroy(&rw_mutex);
-    pthread_cond_destroy(&rw_cond);
 }
 
-// What if we want to give writers higher priority.
-// If there are many readers, writers may wait forever...
-// Add nwaitwriters counter. 
+// if nreaders >= 0, indicates #readers.
+// If nreaders<0, there is a write lock. 
+
+// Trick: Implement the non priority writer version first, then add priority writer with nWaitingWriters.
+
 void RwLock::getReadLock()
 {
-    pthread_mutex_lock(&rw_mutex);
-    while (nreaders == -1 || nwaitwriters > 0) {
-        pthread_cond_wait(&rw_cond, &rw_mutex);
+    pthread_mutex_lock(&mutex);
+    while (nReaders == -1 || nWaitingWriters > 0) {
+        pthread_cond_wait(&cond, &mutex);
     }
 
-    nreaders++;
-    pthread_mutex_unlock(&rw_mutex);
+    nReaders++;
+    pthread_mutex_unlock(&mutex);
 }
 
 void RwLock::getWriteLock()
 {
-    pthread_mutex_lock(&rw_mutex);
-    nwaitwriters++;
-    while (0 != nreaders) {
-        pthread_cond_wait(&rw_cond, &rw_mutex);
+    pthread_mutex_lock(&mutex);
+    nWaitingWriters++;
+    while (nReaders != 0) {
+        pthread_cond_wait(&cond, &mutex);
     }
-
-    nreaders = -1;
-    nwaitwriters--;
-    pthread_mutex_unlock(&rw_mutex);
+    
+    nWaitingWriters--;
+    nReaders = -1;
+    pthread_mutex_unlock(&mutex);
 }
 
 void RwLock::unLock()
 {
-    pthread_mutex_lock(&rw_mutex);
-    if (nreaders > 0) {
-        nreaders--;
-
-        // May do this after unlock the mutex. 
-        if (nreaders == 0) {
-            pthread_cond_broadcast(&rw_cond);
+    pthread_mutex_lock(&mutex);
+    if (nReaders > 0) {
+        --nReaders;
+        if (nReaders == 0) {
+            pthread_cond_broadcast(&cond);
         }
     }
-    else if (nreaders == -1) {
-        nreaders = 0;
-
-        // May do this after unlock the mutex.
-        pthread_cond_broadcast(&rw_cond);
+    else if (nReaders == -1) {
+        nReaders = 0;
+        pthread_cond_broadcast(&cond);
     }
-
-    pthread_mutex_unlock(&rw_mutex);
+    
+    pthread_mutex_unlock(&mutex);
 }
 
 // Test code
@@ -83,7 +79,7 @@ void* reader(void * arg)
 
     sleep(5);
     
-//    cout<<"Releasing read lock.\n";
+    cout<<"Releasing read lock.\n";
     rwlock.unLock();
     cout<<"Released read lock.\n";
 }
@@ -96,7 +92,7 @@ void* writer(void * arg)
 
     sleep(5);
     
-//    cout<<"releasing write lock.\n";
+    cout<<"releasing write lock.\n";
     rwlock.unLock();
     cout<<"Reelased write lock.\n";
 }
