@@ -382,7 +382,7 @@ ListNode * swapLargestTwo(ListNode * root) {
         ptr = ptr->next;
     }
 
-    // Note: first swapt ->next, then swap ->next->next;
+    // Note: Use two stage swap. First swap ->next, then swap ->next->next;
     // Notice the order of the items in the next 3 equations. 
     ListNode * tmp = l1->next;
     l1->next = l2->next;
