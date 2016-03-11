@@ -354,6 +354,75 @@ ListNode *partition2(ListNode *head, int x) {
     return result;
 }
 
+/*
+  Find the two largest nodes in a linked list. Then swap their ref or pointers. Google.
+ */
+ListNode * swapLargestTwo(ListNode * root) {
+    if (root == nullptr || root->next == nullptr)
+        return root;
+
+    ListNode * dummy = new ListNode(0);
+    dummy->next = root;
+    ListNode * ptr = dummy;
+    ListNode * l1 = nullptr, *l2 = nullptr;
+
+    // find the two largest. 
+    while (ptr->next != nullptr) {
+        // Note: First take care of regular case, then add l1==nullptr.
+        // Do not forget to compare val, not next. 
+        if (l1 == nullptr || ptr->next->val > l1->next->val) {
+            l2 = l1;
+            l1 = ptr;
+        }
+        else if (l2 == nullptr || ptr->next->val > l2->next->val) {
+            l2 = ptr;
+        }
+
+        // Note: do not forget the following in a loop with linked list
+        ptr = ptr->next;
+    }
+
+    // Note: first swapt ->next, then swap ->next->next;
+    // Notice the order of the items in the next 3 equations. 
+    ListNode * tmp = l1->next;
+    l1->next = l2->next;
+    l2->next = tmp;
+
+    // Notice the order of the items in the next 3 equations. 
+    tmp = l1->next->next;
+    l1->next->next = l2->next->next;
+    l2->next->next = tmp;
+
+    tmp = dummy->next;
+    delete dummy;
+    return tmp;
+}
+
+ListNode * createLinkedList(vector<int> & nums) {
+    ListNode * dummy = new ListNode(0);
+    ListNode * ptr = dummy;
+    for (auto n : nums) {
+        ptr->next = new ListNode(n);
+        ptr = ptr->next;
+    }
+
+    ptr = dummy->next;
+    delete dummy;
+    return ptr;
+}
+
+void displayList(ListNode * root) {
+    while (root != nullptr) {
+        cout << root->val << " ";
+        root = root->next;
+    }
+    cout << endl;
+}
+
 int main() {
+    vector<int> nums = {3, 2, 1, 4, 6};
+    ListNode * root = createLinkedList(nums);
+    displayList(swapLargestTwo(root));
+    
     return 0;
 }
