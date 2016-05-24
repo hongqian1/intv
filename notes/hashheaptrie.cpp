@@ -177,6 +177,189 @@ public:
     }
 };
 
+/**
+ * Uber
+ * Time Travelling Hash Table/Map/Dict 
+ * 
+ * put(foo, 10) = bar
+ * put(foo, 20) = bar2
+ * put(foo, 30) = bar3
+ * 
+ * get(foo, 20) == bar2
+ * get(foo, 30) == bar3
+ * get(foo, 25) == bar2
+ *
+ * Note: get(foo, 25) returns the value for 20 because 20 is already inserted
+ *       when querying 25, but 30 is not.
+ */
+
+// Note: need add include headers and namespace because Hackerrank does not
+//       include them.
+#include <string>
+#include <unordered_map>
+#include <map>
+#include <iostream>
+
+using namespace std;
+class TimeTraveller {
+public:
+    TimeTraveller() {}
+    void put(const string &foo, int ftime, const string& bar) {
+        hashMap[foo].emplace_back(ftime, bar);
+    }
+    
+    string get(const string &foo, int ftime) {
+        if (hashMap.find(foo) == hashMap.end()) {
+            return "NULL";
+        }
+        else {
+            // Check the definition of hashMap, we are handleing
+            // vector<pair<int, string>>
+            // Need a binary search function
+            int index = search(hashMap[foo], ftime);
+            return index == -1 ? "NULL" : hashMap[foo][index].second;
+        }
+    }
+ 
+private:
+    unordered_map<string, vector<pair<int, string>>> hashMap;
+
+    // Note that it returns the previous index if not found.
+    // It may return -1 if the target ftime is smaller than the first one.
+    int search(vector<pair<int, string>> & timeArray, int ftime) {
+        if (timeArray.empty())
+            return -1;
+        if (ftime < timeArray[0].first)
+            return -1;
+        if (ftime > timeArray.back().first)
+            return timeArray.size() - 1;
+
+        int start = 0;
+        int end = timeArray.size() - 1;
+        while (start + 1 < end) {
+            int mid = start + (end - start) / 2;
+            if (ftime == timeArray[mid].first)
+                return mid;
+            else if (ftime < timeArray[mid].first)
+                end = mid;
+            else
+                start = mid;
+        }
+
+        if (ftime == timeArray[start].first)
+            return start;
+        if (ftime == timeArray[end].first)
+            return end;
+        return start;
+    }
+};
+
+/**
+ * Facebook
+  Given a list of words and a query string, returns a list of words matching the query.
+The query is a made of alphanumerical characters and at most one star character.
+The star character matches one or more alphanumerical character.
+We are interested in exact matches and not prefix matches. For example if the query is "hel", it won't match the word "hello".
+
+Words:
+["hello", "world", "winner"]
+Query:
+"w*" => ["world", "winner"]
+"w*d" => world
+*/
+
+class DictQuery {
+public:
+    DictQuery(const vector<string> & wordList) : root(nullptr) {
+        build(wordList);
+    }
+  
+    vector<string> queryWord(const string & query) {
+        vector<string> result;
+        string word;
+        queryWord(query, 0, root, word, result);
+        return result;
+    }
+  
+private:
+    void build(const vector<string> & wordList) {
+        if (root == nullptr)
+            root = new TrieNode;
+        
+        for (auto & word : wordList) {
+            TrieNode * node = root;
+            int index = 0;
+            while (index != word.size()) {
+                char c = word[index];
+                if (node->children.find(c) == node->children.end())
+                    node->children[c] = new TrieNode;
+                node = node->children[c];
+                ++index;
+            }
+            node->isWord = true;
+        }
+    }
+    
+    // Must remember this DFS model! Do not change!
+    // Must use word variable because of '*'
+    // Do not use extra while loop in recursion.
+    // Recusion is also a loop. If there is no '*', this recursion function
+    // will do the loop job. 
+    void queryWord(const string & query, int index, TrieNode * root, string & word, vector<string> & result) {
+        if (root == nullptr)
+            return;
+        
+        if (index == query.size()) {
+            if (root->isWord) {
+                result.push_back(word);
+            }
+            return;
+        }
+
+        if (query[index] == '*') {
+            for (auto & item : root->children) {
+                word.push_back(item.first);
+                queryWord(query, index, item.second, word, result);
+                queryWord(query, index+1, item.second, word, result);
+                word.pop_back();
+            }
+        }
+        else if (root->children.find(query[index]) != root->children.end()) {
+            root = root->children[query[index]];
+            word.push_back(query[index]);
+            queryWord(query, index+1, root, word, result);
+            word.pop_back();
+        }
+    }
+  
+private:
+    TrieNode * root;  
+};
+
 int main() {
+    // testing code. Check normal cases + edge cases.
+    vector<string> dict = {"hello", "world", "would", "wdd", "wd", "winner", "wake", "pencil", "walk", "wood", "wine"};
+    DictQuery dq(dict);
+    
+    vector<string> result = dq.queryWord("w*d");
+//    vector<string> result = dq.queryWord("w*");
+    for (auto & word : result) {
+        cout << word << " ";
+    }
+    cout << endl;
+    
+    /*
+    TimeTraveller timeTraveller;
+    timeTraveller.put("foo", 10, "bar");
+    timeTraveller.put("foo", 20, "bar2");
+    timeTraveller.put("foo", 30, "bar3");
+    
+    cout << "foo, 20 : " << timeTraveller.get("foo", 20) << endl;
+    cout << "foo, 30 : " << timeTraveller.get("foo", 30) << endl;
+    cout << "foo, 25 : " << timeTraveller.get("foo", 25) << endl;
+    cout << "foo,  1 : " << timeTraveller.get("foo", 1) << endl;
+    */
+    
     return 0;
 }
+
