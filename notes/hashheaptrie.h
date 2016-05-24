@@ -1,4 +1,6 @@
 #include <vector>
+#include <unordered_map>
+
 struct Node
 {
     Node * left;
@@ -46,6 +48,12 @@ public:
         this->val = val;
         this->next = NULL;
     }
+};
+
+struct TrieNode {
+    TrieNode() : isWord(false) {}
+    bool isWord;
+    std::unordered_map<char, TrieNode *> children;
 };
 
 /*

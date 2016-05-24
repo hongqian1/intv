@@ -254,8 +254,101 @@ private:
     }
 };
 
+/**
+ * Facebook
+  Given a list of words and a query string, returns a list of words matching the query.
+The query is a made of alphanumerical characters and at most one star character.
+The star character matches one or more alphanumerical character.
+We are interested in exact matches and not prefix matches. For example if the query is "hel", it won't match the word "hello".
+
+Words:
+["hello", "world", "winner"]
+Query:
+"w*" => ["world", "winner"]
+"w*d" => world
+*/
+
+class DictQuery {
+public:
+    DictQuery(const vector<string> & wordList) : root(nullptr) {
+        build(wordList);
+    }
+  
+    vector<string> queryWord(const string & query) {
+        vector<string> result;
+        string word;
+        queryWord(query, 0, root, word, result);
+        return result;
+    }
+  
+private:
+    void build(const vector<string> & wordList) {
+        if (root == nullptr)
+            root = new TrieNode;
+        
+        for (auto & word : wordList) {
+            TrieNode * node = root;
+            int index = 0;
+            while (index != word.size()) {
+                char c = word[index];
+                if (node->children.find(c) == node->children.end())
+                    node->children[c] = new TrieNode;
+                node = node->children[c];
+                ++index;
+            }
+            node->isWord = true;
+        }
+    }
+    
+    // Must remember this DFS model! Do not change!
+    // Must use word variable because of '*'
+    // Do not use extra while loop in recursion.
+    // Recusion is also a loop. If there is no '*', this recursion function
+    // will do the loop job. 
+    void queryWord(const string & query, int index, TrieNode * root, string & word, vector<string> & result) {
+        if (root == nullptr)
+            return;
+        
+        if (index == query.size()) {
+            if (root->isWord) {
+                result.push_back(word);
+            }
+            return;
+        }
+
+        if (query[index] == '*') {
+            for (auto & item : root->children) {
+                word.push_back(item.first);
+                queryWord(query, index, item.second, word, result);
+                queryWord(query, index+1, item.second, word, result);
+                word.pop_back();
+            }
+        }
+        else if (root->children.find(query[index]) != root->children.end()) {
+            root = root->children[query[index]];
+            word.push_back(query[index]);
+            queryWord(query, index+1, root, word, result);
+            word.pop_back();
+        }
+    }
+  
+private:
+    TrieNode * root;  
+};
+
 int main() {
-    // testing code. Check normal cases + edge cases. 
+    // testing code. Check normal cases + edge cases.
+    vector<string> dict = {"hello", "world", "would", "wdd", "wd", "winner", "wake", "pencil", "walk", "wood", "wine"};
+    DictQuery dq(dict);
+    
+    vector<string> result = dq.queryWord("w*d");
+//    vector<string> result = dq.queryWord("w*");
+    for (auto & word : result) {
+        cout << word << " ";
+    }
+    cout << endl;
+    
+    /*
     TimeTraveller timeTraveller;
     timeTraveller.put("foo", 10, "bar");
     timeTraveller.put("foo", 20, "bar2");
@@ -265,6 +358,7 @@ int main() {
     cout << "foo, 30 : " << timeTraveller.get("foo", 30) << endl;
     cout << "foo, 25 : " << timeTraveller.get("foo", 25) << endl;
     cout << "foo,  1 : " << timeTraveller.get("foo", 1) << endl;
+    */
     
     return 0;
 }
