@@ -12,6 +12,9 @@
 #include <algorithm>
 #include <stack>
 #include <unordered_map>
+#include <queue>
+#include <iostream>
+#include <climits>
 
 #include "test.h"
 
@@ -1048,7 +1051,7 @@ int maxProfit3(vector<int> &prices) {
 Note
 The subarray should contain at least one number
 Example
-For example, given the array [Å|2,2,Å|3,4,Å|1,2,1,Å|5,3], the contiguous subarray [4,Å|1,2,1] has the largest sum = 6.
+For example, given the array [‚àí2,2,‚àí3,4,‚àí1,2,1,‚àí5,3], the contiguous subarray [4,‚àí1,2,1] has the largest sum = 6.
 */
 int maxSubArray(vector<int> nums) {
     int sum = 0;
@@ -1068,8 +1071,58 @@ int maxSubArray(vector<int> nums) {
     return maxSum;
 }
 
+struct SegmentTreeNode {
+    SegmentTreeNode(int s, int e, int m=INT_MIN) : start(s), end(e), max(m) {}
+    int start;
+    int end;
+    int max;
+    SegmentTreeNode * left;
+    SegmentTreeNode * right;
+};
+
+// Move all 0's to the right side of array. 
+void zeroToRight(vector<int> & nums) {
+    if (nums.empty())
+        return;
+    
+    // partition.
+    int pivot = 0;
+    int left = 0;
+    for (int i = 1; i < nums.size(); ++i) {
+        if (nums[i] != 0) {
+            swap(nums[++left], nums[i]);
+        }
+    }
+    swap(nums[pivot], nums[left]);
+}
+
+class Solution {
+public:
+};
+
 int main()
 {
+    Solution sol;
+
+    /*
+    string start = "a";
+    string end = "c";
+    unordered_set<string> dict;
+    dict.insert("a");
+    dict.insert("b");
+    dict.insert("c");
+    
+    vector<vector<string>> res = findLadders(start, end, dict);
+    for (auto &ladder : res) {
+        for (auto &str : ladder) {
+            cout << str << " ";
+        }
+        cout << endl;
+    }
+    
+    return 0;
+    */
+    
 //    printf("power 3^5 = %d\n", power(3,5));
     printf("is Little Endian %d.\n", isLittleEndian());
 
