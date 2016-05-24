@@ -11,7 +11,9 @@
 #include <vector>
 #include <algorithm>
 #include <stack>
+#include <queue>
 #include <unordered_map>
+#include <iostream> // For std::cout, etc. 
 
 #include "test.h"
 
@@ -1048,7 +1050,7 @@ int maxProfit3(vector<int> &prices) {
 Note
 The subarray should contain at least one number
 Example
-For example, given the array [�|2,2,�|3,4,�|1,2,1,�|5,3], the contiguous subarray [4,�|1,2,1] has the largest sum = 6.
+For example, given the array [−2,2,−3,4,−1,2,1,−5,3], the contiguous subarray [4,−1,2,1] has the largest sum = 6.
 */
 int maxSubArray(vector<int> nums) {
     int sum = 0;
@@ -1068,13 +1070,229 @@ int maxSubArray(vector<int> nums) {
     return maxSum;
 }
 
+// Lint code
+void DFSsearchPaths(unordered_map<string, vector<string>> & reverseWordMap, vector<string> & path, const string & start, const string & end, vector<vector<string>>&result) {
+    if (start == end) {
+        // 从后往前加入result，等于是reverse ladder string了。
+        result.push_back(vector<string>());
+        for (int i = path.size()-1; i >= 0; --i) {
+            result.back().push_back(path[i]);
+        }
+            
+        /* 不需要reverse了
+        // reverse path.
+        for (int first=0, last=path.size()-1; first<last; ++first, --last) {
+        swap(path[first], path[last]);
+        }
+        result.push_back(path);
+            
+        // Must reverse back because path will be used later. 
+        for (int first=0, last=path.size()-1; first<last; ++first, --last) {
+        swap(path[first], path[last]);
+        }
+        */
+        return;
+    }
+        
+    // 这个也可以减去很多时间
+    if (reverseWordMap.find(start) == reverseWordMap.end())
+        return;
+
+    for (auto & word : reverseWordMap[start]) {
+        // push_back和pop_back都在loop里call，避免复杂情况。如果在外面，会有麻烦。例如，这个for loop根本不被call，hash table里是空的。我们还必须在call 这个function前把start/word push_back().
+        path.push_back(word);
+        DFSsearchPaths(reverseWordMap, path, word, end, result);
+        path.pop_back();
+    }
+}
+    
+int BFSladderLength(string start, string end, unordered_set<string> &dict, unordered_map<string, vector<string>> & reverseWordMap) {
+    // write your code here
+    // Use BFS for shortest search. Use a queue.
+    queue<string> tasks;
+    tasks.push(start);
+    int ladderLen = 0;
+        
+    unordered_set<string> prevWords;
+    // This is important to avoid searching the duplicate words
+    // But it is OK to have duplicate words in the same level for this question.
+    prevWords.insert(start);
+
+    while (!tasks.empty()) {
+        ++ladderLen;
+            
+        unordered_set<string> wordsInOneLevel; // no duplicates in one set
+        // Every time loop through the size of the tasks. 
+        int len = tasks.size();
+        for (int i=0; i<len; ++i ){
+            string & word = tasks.front();
+            if (word == end)
+                return ladderLen;
+                
+            for (int j=0; j<word.size(); ++j) {
+                for (int k='a'; k<='z'; ++k) {
+                    if (word[j] == k)
+                        continue;
+                            
+                    string newWord = word;
+                    newWord[j] = k;
+                    if (dict.find(newWord) == dict.end() || prevWords.find(newWord) != prevWords.end())
+                        continue;
+                            
+                    // Do not add to tasks due to duplicate words
+                    // tasks.push_back(newWord);
+                    wordsInOneLevel.insert(newWord);
+                        
+                    // You may get duplicate new words here. But the word is always different when new words are duplicate. 
+                    reverseWordMap[newWord].push_back(word);
+                        
+                    // Do not add to prevWords now so that we allow dupicate strings to be added to reverseWordMap in the current level
+                    // There can be different mappings in reverseWordMap for the same new words!
+                    //prevWords.insert(newWord);
+                }
+            }
+            tasks.pop();
+        }
+            
+        // Use auto to save time. Insert into prevWords to avoid duplicates
+        for (auto it = wordsInOneLevel.begin(); it != wordsInOneLevel.end(); ++it) {
+            tasks.push(*it);
+            prevWords.insert(*it);
+        }
+        wordsInOneLevel.clear();
+    }
+    return 0;
+}
+
+vector<vector<string>> findLadders(string start, string end, unordered_set<string> &dict) {
+    // write your code here
+    // Use BFS to find the length shortest path and store the reverse paths in a map. 
+    unordered_map<string, vector<string>> reverseWordMap;
+    int len = BFSladderLength(start, end, dict, reverseWordMap);
+        
+    vector<vector<string>> result;
+    if (len==0)
+        return result;
+            
+    // Search reverseWordMap and get all the paths. 
+    vector<string> path;
+    // The start and end are reversed because the map is from end to start. 
+    path.push_back(end);
+    DFSsearchPaths(reverseWordMap, path, end, start, result);
+    return result;
+}
+
+string simplifyPath(string& path) {
+    string result;
+    if (path.empty())
+        return result;
+    
+    stack<char> tasks;
+    tasks.push(path[0]);
+    for (int i = 1; i < path.size(); ++i) {
+        if (path[i] == '/') {
+            if (tasks.top() != '/')
+                tasks.push(path[i]);
+        }
+        else if (path[i] == '.' && (i+1 >= path.size() || path[i+1] != '.')) {
+            if (tasks.top() == '/') {
+                tasks.pop();
+            }
+        }
+        else if (path[i] == '.' && i+1 < path.size() && path[i+1] == '.') {
+            if (tasks.top() == '/')
+                tasks.pop();
+
+            // pop a directory name. 
+            while (!tasks.empty() && tasks.top() != '/')
+                tasks.pop();
+            
+            i++; // skip the next '.'
+        }
+        else {
+            tasks.push(path[i]);
+        }
+    }
+    
+    if (tasks.top() == '/' && tasks.size() > 1) {
+        tasks.pop();
+    }
+
+    result.resize(tasks.size());
+    for (int i = result.size()-1; i >= 0; --i) {
+        result[i] = tasks.top();
+        tasks.pop();
+    }
+    return result;
+}
+
+class Solution {
+public:
+
+};
+
+class LRUCache {
+public:
+    LRUCache(int c) : capacity(c) {}
+
+    // Remember 3 things
+    // 1. capacity 2. move to the front of cache. 3. update hashMap. 
+    int get(int key) {
+        auto it = hashMap[key];
+        cache.splice(cache.begin(), cache, it);
+        return cache.begin()->second;
+    }
+    
+    void set(int key, int value) {
+        // D&C. Check if the key already exists.
+        if (hashMap.find(key) == hashMap.end()) {
+            if (cache.size() == capacity) {
+                hashMap.erase(cache.back().first);
+                cache.pop_back();
+            }
+            cache.emplace_front(key, value);
+            hashMap[key] = cache.begin();
+        }
+        else {
+            auto it = hashMap[key];
+            it->second = value;
+            cache.splice(cache.begin(), cache, it);
+        }
+    }
+    
+private:
+    int capacity;
+    list<pair<int, int>> cache;
+    unordered_map<int, list<pair<int, int>>::iterator> hashMap;
+};
+
 int main()
 {
+    Solution sol;
+
+    /*
+    string start = "qa";
+    string end = "sq";
+    unordered_set<string> dict = {"si","go","se","cm","so","ph","mt","db","mb","sb","kr","ln","tm","le","av","sm","ar","ci","ca","br","ti","ba","to","ra","fa","yo","ow","sn","ya","cr","po","fe","ho","ma","re","or","rn","au","ur","rh","sr","tc","lt","lo","as","fr","nb","yb","if","pb","ge","th","pm","rb","sh","co","ga","li","ha","hz","no","bi","di","hi","qa","pi","os","uh","wm","an","me","mo","na","la","st","er","sc","ne","mn","mi","am","ex","pt","io","be","fm","ta","tb","ni","mr","pa","he","lr","sq","ye"};
+    vector<vector<string>> result = findLadders(start, end, dict);
+    for (auto & ladder : result) {
+        for (auto & word : ladder) {
+            cout << word << " ";
+        }
+        cout << endl;
+    }
+    */
+
 //    printf("power 3^5 = %d\n", power(3,5));
     printf("is Little Endian %d.\n", isLittleEndian());
 
     printPascal(10);
-    
+
+    cout <<  "\ncheck smallest integer, -2^31\n";
+    // Note that 0xffffffff is -1. x negate plus 1?
+    int x = 0x80000000;
+    cout << "x = " << x << ", x % 11 = " << (x%11 + 11)%11 << endl;
+
     return 0;
 }
 
