@@ -268,86 +268,82 @@ Query:
 "w*d" => world
 */
 
-class DictQuery {
+class Dictionary
+{
 public:
-    DictQuery(const vector<string> & wordList) : root(nullptr) {
-        build(wordList);
-    }
-  
-    vector<string> queryWord(const string & query) {
-        vector<string> result;
-        string word;
-        queryWord(query, 0, root, word, result);
-        return result;
-    }
-  
-private:
-    void build(const vector<string> & wordList) {
+    Dictionary() : root(nullptr) {}
+
+    void build(vector<string> &wordList) {
         if (root == nullptr)
             root = new TrieNode;
-        
         for (auto & word : wordList) {
-            TrieNode * node = root;
             int index = 0;
+            TrieNode * node = root;
             while (index != word.size()) {
-                char c = word[index];
-                if (node->children.find(c) == node->children.end())
-                    node->children[c] = new TrieNode;
-                node = node->children[c];
+                if (node->children.find(word[index]) == node->children.end())
+                    node->children[word[index]] = new TrieNode;
+                node = node->children[word[index]];
                 ++index;
             }
             node->isWord = true;
         }
     }
-    
+
     // Must remember this DFS model! Do not change!
     // Must use word variable because of '*'
     // Do not use extra while loop in recursion.
     // Recusion is also a loop. If there is no '*', this recursion function
     // will do the loop job. 
-    void queryWord(const string & query, int index, TrieNode * root, string & word, vector<string> & result) {
+    vector<string> query(const string & word) {
+        string candidate;
+        vector<string> result;
+        query(root, word, 0, candidate, result);
+        return result;
+    }
+
+    void query(TrieNode * root, const string& word, int pos, string &candidate, vector<string> & result) {
         if (root == nullptr)
             return;
-        
-        if (index == query.size()) {
+        if (pos == word.size()) {
             if (root->isWord) {
-                result.push_back(word);
+                result.push_back(candidate);
             }
             return;
         }
 
-        if (query[index] == '*') {
-            for (auto & item : root->children) {
-                word.push_back(item.first);
-                queryWord(query, index, item.second, word, result);
-                queryWord(query, index+1, item.second, word, result);
-                word.pop_back();
+        char c = word[pos];
+        if (c == '*') {
+            for (auto & onePair : root->children) {
+                candidate.push_back(onePair.first);
+                query(onePair.second, word, pos, candidate, result);
+                query(onePair.second, word, pos+1, candidate, result);
+                candidate.pop_back();
             }
         }
-        else if (root->children.find(query[index]) != root->children.end()) {
-            root = root->children[query[index]];
-            word.push_back(query[index]);
-            queryWord(query, index+1, root, word, result);
-            word.pop_back();
+        else {
+            candidate.push_back(c);
+            query(root->children[c], word, pos+1, candidate, result);
+            candidate.pop_back();
         }
     }
-  
+
 private:
-    TrieNode * root;  
+    TrieNode * root;
 };
 
 int main() {
     // testing code. Check normal cases + edge cases.
-    vector<string> dict = {"hello", "world", "would", "wdd", "wd", "winner", "wake", "pencil", "walk", "wood", "wine"};
-    DictQuery dq(dict);
-    
-    vector<string> result = dq.queryWord("w*d");
-//    vector<string> result = dq.queryWord("w*");
+    Dictionary dict;
+    vector<string> wordList = {"hello", "world", "winner", "would", "wd", "wdd", "find", "hand", "wind", "wake", "hot", "gate"};
+    dict.build(wordList);
+    vector<string> result;
+    result = dict.query("w*d");
+//    result = dict.query("hello");
     for (auto & word : result) {
         cout << word << " ";
     }
     cout << endl;
-    
+
     /*
     TimeTraveller timeTraveller;
     timeTraveller.put("foo", 10, "bar");
