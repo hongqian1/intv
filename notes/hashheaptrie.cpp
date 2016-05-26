@@ -317,10 +317,10 @@ private:
         }
 
         if (query[index] == '*') {
-            for (auto & item : root->children) {
-                word.push_back(item.first);
-                queryWord(query, index, item.second, word, result);
-                queryWord(query, index+1, item.second, word, result);
+            for (auto & onePair : root->children) {
+                word.push_back(onePair.first);
+                queryWord(query, index, onePair.second, word, result);
+                queryWord(query, index+1, onePair.second, word, result);
                 word.pop_back();
             }
         }
