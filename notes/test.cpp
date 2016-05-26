@@ -1100,11 +1100,36 @@ class Solution {
 public:
 };
 
+/**
+ * Facebook
+  Given a list of words and a query string, returns a list of words matching the query.
+The query is a made of alphanumerical characters and at most one star character.
+The star character matches one or more alphanumerical character.
+We are interested in exact matches and not prefix matches. For example if the query is "hel", it won't match the word "hello".
+
+Words:
+["hello", "world", "winner"]
+Query:
+"w*" => ["world", "winner"]
+"w*d" => world
+*/
+
 int main()
 {
     Solution sol;
+    /*
+    Dictionary dict;
+    vector<string> wordList = {"hello", "world", "winner", "would", "wd", "wdd", "find", "hand", "wind", "wake", "hot", "gate"};
+    dict.build(wordList);
+    vector<string> result;
+    result = dict.query("w*d");
+//    result = dict.query("hello");
+    for (auto & word : result) {
+        cout << word << " ";
+    }
+    cout << endl;
+    */
     
-
     /*
     string start = "a";
     string end = "c";
