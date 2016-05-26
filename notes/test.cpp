@@ -11,10 +11,6 @@
 #include <vector>
 #include <algorithm>
 #include <stack>
-#include <unordered_map>
-#include <queue>
-#include <iostream>
-#include <climits>
 
 #include "test.h"
 
@@ -155,7 +151,7 @@ void reverseWords(char * str)
     }
 }
 
-bool getNodePath(Node * head, Node * node, vector<Node *> & path)
+bool getNodePath(Node * head, Node * node, std::list<Node *> & path)
 {
     if (head==NULL || node == NULL)
         return false;
@@ -292,35 +288,34 @@ void sortVector(std::vector<int> &ivec, int len=100)
     sort(ivec.begin(), ivec.begin()+len, my_compare);
 }
 
-void removeSubStr(char * str, const char * sub)
+void removeSubStr(char * str, char * sub)
 {
     if (str == NULL || sub == NULL)
         return;
-    
+
     char * output = str;
-    char * ptr = str;
-
-    while (*ptr)
+    while (*str)
     {
-        const char * sub2 = sub;
-        char * ptr2 = ptr;
+        char * strptr = str;
+        char * subptr = sub;
 
-        while (*ptr2 && *sub2 && *ptr2 == *sub2)
+        while (*strptr && *subptr && *strptr == *subptr)
         {
-            ++ptr2;
-            ++sub2;
+            ++strptr;
+            ++subptr;
         }
 
-        if (*sub2 == '\0')
+        if (*subptr==0)
         {
-            ptr = ptr2;
+            str=strptr;
         }
         else
         {
-            *output++ = *ptr++;
+            *output++=*str++;
         }
     }
-    *output = '\0';
+
+    *output=0;
 }
 
 char * my_strstr(char * str, const char * sub)
@@ -420,27 +415,19 @@ bool btreeSum(Node * root, int sum)
 */
 // post order, get the longest depth of each subtree of the node.
 
-int getDiameter(Node * root, int * height)
+int longestPath(Node * root, int & diameter)
 {
     if (root == NULL)
-    {
-        *height = 0;
         return 0;
-    }
 
-    int lh = 0;
-    int rh = 0;
+    int leftLen=longestPath(root->left, diameter);
+    int rightLen=longestPath(root->right, diameter);
 
-    int ld = getDiameter(root->left, &lh);
-    int rd = getDiameter(root->right, &rh);
-    *height = 1+lh>rh?lh:rh;
-    int subd = ld>rd?ld:rd;
+    if ((leftLen+rightLen+1)>diameter)
+        diameter = leftLen+rightLen+1;
 
-    int diam = lh + rh + 1;
-    return subd>diam?subd:diam;
+    return 1+leftLen>rightLen?leftLen:rightLen;
 }
-
-// print prime numbers less than N
 
 SingleNode * reverseList(SingleNode * head)
 {
@@ -480,7 +467,7 @@ All nodes along children pointers from root to leaf nodes form a path in a binar
 #define TARGET_SUM 22
 void printPath(Node * root, int sum, vector<int> &path)
 {
-    if (root==NULL)
+    if (root=NULL)
         return;
 
     sum += root->value;
@@ -712,346 +699,15 @@ int * computeArray(int * A, int len)
 }
 
 /*
-  Given two sorted integer arrays A and B, merge B into A as one sorted array.
+void quicksort(int * array, int start, int end)
+{
+    if (array == NULL || start>=end)
+        return;
 
-Note
-You may assume that A has enough space (size that is greater or equal to m + n) to hold additional elements from B. The number of elements initialized in A and B are mand n respectively.
-
-Example
-A = [1, 2, 3, empty, empty] B = [4,5]
-
-After merge, A will be filled as [1,2,3,4,5]
- */
-// Need merge from back to front due to cost of moving elements in A.
-// It saves a lot of memory copy.
-void mergeSortedArray(int A[], int m, int B[], int n) {
-    // write your code here
-    int last = m + n -1;
-    int alast = m - 1;
-    int blast = n - 1;
-
-    while (alast >= 0 && blast >= 0) {
-        if (A[alast] > B[blast])
-            A[last--] = A[alast--];
-        else
-            A[last--] = B[blast--];
-    }
-
-    if (alast < 0) {
-        while (blast >= 0)
-            A[last--] = B[blast--];
-    } else {
-        while (alast >= 0)
-            A[last--] = A[alast--];
-    }
+    int mid = partition(array, start, end);
+    quicksort(array, start, mid);
+    quicksort(array, mid+1, end);
 }
-
-/* Single Number II
-  Given 3*n + 1 numbers, every numbers occurs triple times except one, find it.
-Example
-Given [1,1,2,3,3,3,2,2,4,1] return 4
-*/
-// Note: For each bit in a specific number, it will appear 3 times.
-//       Use cancellation approach. Add all from a bit and mod 3. Then
-//       set the bit in result.
-// Note: You can always use hash table if there is no space restriction.
-//       Just use a hash map to store the number of appearance for each number.
-//       Remove it from hash map if it reaches 3. 
-int singleNumberII(vector<int> &A) {
-    // write your code here
-    int result=0;
-        
-    for (int i=0; i<32; ++i) {
-        int bit = 0;
-        for (int j=0; j<A.size(); ++j) {
-            bit += (A[j]>>i) &1;
-        }
-        bit %= 3; // May move this into the for j loop to avoid number overflow.
-        result |= bit << i; 
-    }
-    return result;
-}
-
-/* Single Number III
-  Given 2*n + 2 numbers, every numbers occurs twice except two, find them.
-
-Example
-Given [1,2,2,3,4,4,5,3] return 1 and 5
- */
-vector<int> singleNumberIII(vector<int> &A) {
-    // write your code here
-    int n = 0;
-    for (int i=0; i<A.size(); ++i)
-        n ^= A[i];
-        
-    // Set the first non-zero bit with a short cut. May use a loop and
-    // shift operator instead.
-    // This bit differentiates the two numbers. Because the two numbers
-    // must be different, there must be one bit set after XOR operation.
-    // If they are the same, XOR will yield 0. 
-    n = n & (-n);
-        
-    vector<int> result(2, 0);
-    for (int i=0; i<A.size(); ++i) {
-        // Must use parentheses becaues & does not precede operator ==. 
-        if ((n & A[i]) == 0)
-            result[0] ^= A[i];
-        else
-            result[1] ^= A[i];
-    }
-    return result;
-}
-
-/* Majority Number
-  Given an array of integers, the majority number is the number that occurs more than half of the size of the array. Find it.
-
-Example
-For [1, 1, 1, 1, 2, 2, 2], return 1
-
-Challenge
-O(n) time and O(1) space
- */
-// Note: use cancellation approach as in "single number" puzzles.
-// For O(N) and O(1) space, always think about cancellation.
-// The key is that majority number happens more than half times. 
-int majorityNumber(vector<int> nums) {
-    // Need two variables. So the space complexity is O(C). 
-    int majority = 0;
-    int count = 0;
-        
-    for (int i=0; i<nums.size(); ++i) {
-        if (count == 0) {
-            majority = nums[i];
-            ++count;
-        } else if (majority == nums[i]) {
-            ++count;
-        } else {
-            // cancel if it is different. 
-            --count;
-        }
-    }
-    return majority;
-}
-
-/* Majority Number II
-  Given an array of integers, the majority number is the number that occurs more than 1/3 of the size of the array.
-
-Find it.
-
-Note
-There is only one majority number in the array
-
-Example
-For [1, 2, 1, 2, 1, 3, 3] return 1
-
-Challenge
-O(n) time and O(1) space
- */
-// Note: Use cancellation approach, but cancel three items each time.
-//       Need keep two numbers because of that. 
-int majorityNumber2(vector<int> nums) {
-    int num1=0, num2=0, count1=0, count2=0;
-    for (int i=0; i<nums.size(); ++i) {
-        if (count1==0) {
-            num1 = nums[i];
-            ++count1;
-        } else if (count2 == 0 && num1 != nums[i]) {
-            // Must make sure num1 != nums[i] here to avoid dup. 
-            num2 = nums[i];
-            ++count2;
-        } else if (num1 == nums[i]) {
-            ++count1;
-        } else if (num2 == nums[i]) {
-            ++count2;
-        } else {
-            --count1;
-            --count2;
-        }
-    }
-
-    // Must go through the array again to compare count1 and count2.
-    // You can not compare them now. The count may be misleading because
-    // the majority number may have been cancelled with other numbers and show
-    // a small count here. 
-    count1 = 0;
-    count2 = 0;
-    for (int i=0; i<nums.size(); ++i) {
-        if (nums[i] == num1)
-            ++count1;
-        else if (nums[i] == num2)
-            ++count2;
-    }
-        
-    return count1>count2?num1:num2;
-}
-
-/* Majority Number III
-  Given an array of integers and a number k, the majority number is the number that occurs more than 1/k of the size of the array. Find it.
-
-Note
-There is only one majority number in the array.
-
-Example
-For [3,1,2,3,2,3,3,4,4,4] and k = 3, return 3
-
-Challenge
-O(n) time and O(k) extra space
- */
-// Use cancellation approach. But add k-1 numbers to a hash map to keep
-// the number and count. 
-int majorityNumber(vector<int> nums, int k) {
-    unordered_map<int, int> candidates;
-        
-    for (int i=0; i<nums.size(); ++i) {
-        // Always use it to keep the result for a map because it will be used
-        // later. There might be exceptions. 
-        auto it = candidates.find(nums[i]);
-        if (it != candidates.end()) {
-            ++it->second; // increment the count
-            continue;
-        }
-            
-        if (candidates.size() == k-1) {
-            // reduce one count for all numbers in hash map.
-            // Use while loop instead of for because iterator will be
-            // invalidated after deletion. Need special treatment. 
-            it = candidates.begin();
-            while (it != candidates.end()) {
-                --it->second;
-                if (it->second == 0) { // Need delete the item from map. 
-                    int key = it->first;
-                    ++it;
-                    candidates.erase(key);
-                }
-                else
-                    ++it;
-            }
-        } else {
-            // Add to hash map. 
-            candidates[nums[i]] = 1;
-        }
-    }
-
-    // We still need loop the array and find the number with max occurences. 
-    for (auto it = candidates.begin(); it != candidates.end(); ++it) {
-        it->second=0; // reset count to 0.
-    }
-        
-    int maxCount=0, maxNum=0; // Find number with maxCount
-    for (int i=0; i<nums.size(); ++i) {
-        auto it = candidates.find(nums[i]);
-        if (it != candidates.end()) {
-            ++it->second;
-            if (it->second > maxCount) {
-                maxCount = it->second;
-                maxNum = nums[i];
-            }
-        }
-    }
-    return maxNum;
-}
-
-/* Best Time to Buy and Sell Stock
-  Say you have an array for which the ith element is the price of a given stock on day i.
-
-If you were only permitted to complete at most one transaction (ie, buy one and sell one share of the stock), design an algorithm to find the maximum profit.
-
-Example
-Given an example [3,2,3,1,2], return 1
- */
-// Note: When there are two changing numbers, choose one to keep with the for
-//       loop. In this case, we have to choose the selling price and keep a
-//       running min buying price.
-int maxProfit(vector<int> &prices) {
-    // write your code here
-    int minPrice = numeric_limits<int>::max();
-    int maxValue = 0;
-    for (int i=0; i<prices.size(); ++i) {
-        if (prices[i] < minPrice)
-            minPrice = prices[i];
-            
-        int profit = prices[i] - minPrice;
-        maxValue = max(maxValue, profit);
-    }
-    return maxValue;
-}
-
-/* Best Time to Buy and Sell Stock II
-  Say you have an array for which the ith element is the price of a given stock on day i.
-
-Design an algorithm to find the maximum profit. You may complete as many transactions as you like (ie, buy one and sell one share of the stock multiple times). However, you may not engage in multiple transactions at the same time (ie, you must sell the stock before you buy again).
-
-Example
-Given an example [2,1,2,0,1], return 2
- */
-// Note: Add profit for every rise. But have to reset low price after a sell
-//       because you can not do multiple transactions.
-int maxProfit2(vector<int> &prices) {
-    // write your code here
-    int low = numeric_limits<int>::max(); 
-    int profits = 0;
-        
-    for (int i=0; i<prices.size(); ++i) {
-        if (prices[i] < low) 
-            low = prices[i];
-        if (prices[i] > low) {
-            // Do not forget to reset low. 
-            profits += prices[i]-low;
-            low = prices[i];
-        }
-    }
-    return profits;
-}
-
-/* Best Time to Buy and Sell Stock III
-  Say you have an array for which the ith element is the price of a given stock on day i.
-
-Design an algorithm to find the maximum profit. You may complete at most two transactions.
-
-Note
-You may not engage in multiple transactions at the same time (ie, you must sell the stock before you buy again).
-
-Example
-Given an example [4,4,6,1,1,4,2,5], return 6
- */
-// Note: Use forward-backward traversal method. This is very useful.
-//       Add the max profit till the point in a separate forward array.
-//       Then traverse from back and add two profits to find the max.
-//       This is similar to DP except there are two forward traversals in DP. 
-int maxProfit3(vector<int> &prices) {
-    // write your code here
-    vector<int> forward(prices.size(), 0);
-
-    int low = numeric_limits<int>::max();
-    int maxP = 0;
-    // forward traversal. 
-    for (int i=0; i<prices.size(); ++i) {
-        if (prices[i] < low)
-            low = prices[i];
-            
-        maxP = max(maxP, prices[i]-low);
-        forward[i]=maxP;
-    }
-
-    // backward traversal. 
-    int high = numeric_limits<int>::min();
-    for (int i=prices.size()-1; i>0; --i) {
-        if (prices[i] > high)
-            high = prices[i];
-
-        // Add two profits and compare with max. 
-        maxP = max(maxP, forward[i-1] + high - prices[i]);
-    }
-    
-    return maxP;
-}
-
-/* Maximum Subarray
-   Given an array of integers, find a contiguous subarray which has the largest sum.
-Note
-The subarray should contain at least one number
-Example
-For example, given the array [−2,2,−3,4,−1,2,1,−5,3], the contiguous subarray [4,−1,2,1] has the largest sum = 6.
 */
 int maxSubArray(vector<int> nums) {
     int sum = 0;
@@ -1070,15 +726,6 @@ int maxSubArray(vector<int> nums) {
     }
     return maxSum;
 }
-
-struct SegmentTreeNode {
-    SegmentTreeNode(int s, int e, int m=INT_MIN) : start(s), end(e), max(m) {}
-    int start;
-    int end;
-    int max;
-    SegmentTreeNode * left;
-    SegmentTreeNode * right;
-};
 
 // Move all 0's to the right side of array. 
 void zeroToRight(vector<int> & nums) {
@@ -1148,12 +795,4 @@ int main()
     
     return 0;
     */
-    
-//    printf("power 3^5 = %d\n", power(3,5));
-    printf("is Little Endian %d.\n", isLittleEndian());
-
-    printPascal(10);
-    
-    return 0;
 }
-
