@@ -11,6 +11,9 @@
 #include <vector>
 #include <algorithm>
 #include <stack>
+#include <string>
+#include <unordered_map>
+#include <iostream>
 
 #include "test.h"
 
@@ -467,7 +470,7 @@ All nodes along children pointers from root to leaf nodes form a path in a binar
 #define TARGET_SUM 22
 void printPath(Node * root, int sum, vector<int> &path)
 {
-    if (root=NULL)
+    if (root==nullptr)
         return;
 
     sum += root->value;
@@ -764,7 +767,7 @@ Query:
 int main()
 {
     Solution sol;
-    /*
+
     Dictionary dict;
     vector<string> wordList = {"hello", "world", "winner", "would", "wd", "wdd", "find", "hand", "wind", "wake", "hot", "gate"};
     dict.build(wordList);
@@ -775,7 +778,7 @@ int main()
         cout << word << " ";
     }
     cout << endl;
-    */
+
     
     /*
     string start = "a";
