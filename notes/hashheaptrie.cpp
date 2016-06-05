@@ -317,8 +317,13 @@ private:
             if (c == '*') {
                 for (auto & onePair : node->children) {
                     candidate.push_back(onePair.first);
+
+                    // The following two queries are the same for every node
+                    // along the path. This is the rule of recursion.
+                    // So we just need to take care of one node/level,
+                    // and the rest is done automatically.
                     
-                    // Match more nodes along the path
+                    // Match more nodes along the path. 
                     query(onePair.second, word, pos, candidate, result);
 
                     // Match current node only.
