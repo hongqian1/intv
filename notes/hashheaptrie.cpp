@@ -268,66 +268,74 @@ Query:
 "w*d" => world
 */
 
-class Dictionary
-{
-public:
-    Dictionary() : root(nullptr) {}
+/*
+struct TrieNode {
+    TrieNode() : isWord(false) {}
+    bool isWord;
+    unordered_map<char, TrieNode*> children;
+};
+*/
 
-    void build(vector<string> &wordList) {
-        if (root == nullptr)
-            root = new TrieNode;
+class Dictionary {
+public:
+    Dictionary() {
+        root = new TrieNode;
+    }
+
+    void build(const vector<string> & wordList) {
         for (auto & word : wordList) {
-            int index = 0;
             TrieNode * node = root;
-            while (index != word.size()) {
-                if (node->children.find(word[index]) == node->children.end())
-                    node->children[word[index]] = new TrieNode;
-                node = node->children[word[index]];
-                ++index;
+            
+            // The loop builds a word path from root to leaf.
+            // The node also goes from root to leaf.
+            for (int i = 0; i < word.size(); ++i) {
+                char c = word[i];
+                if (node->children.find(c) == node->children.end()) {
+                    node->children[c] = new TrieNode;
+                }
+                node = node->children[c];
             }
             node->isWord = true;
         }
     }
 
-    // Must remember this DFS model! Do not change!
-    // Must use word variable because of '*'
-    // Do not use extra while loop in recursion.
-    // Recusion is also a loop. If there is no '*', this recursion function
-    // will do the loop job. 
     vector<string> query(const string & word) {
         string candidate;
         vector<string> result;
         query(root, word, 0, candidate, result);
         return result;
     }
-
-    void query(TrieNode * root, const string& word, int pos, string &candidate, vector<string> & result) {
-        if (root == nullptr)
-            return;
+    
+private:
+    void query(TrieNode * node, const string & word, int pos, string & candidate, vector<string> & result) {
         if (pos == word.size()) {
-            if (root->isWord) {
+            if (node->isWord)
                 result.push_back(candidate);
-            }
-            return;
-        }
-
-        char c = word[pos];
-        if (c == '*') {
-            for (auto & onePair : root->children) {
-                candidate.push_back(onePair.first);
-                query(onePair.second, word, pos, candidate, result);
-                query(onePair.second, word, pos+1, candidate, result);
-                candidate.pop_back();
-            }
         }
         else {
-            candidate.push_back(c);
-            query(root->children[c], word, pos+1, candidate, result);
-            candidate.pop_back();
+            char c = word[pos];
+            if (c == '*') {
+                for (auto & onePair : node->children) {
+                    candidate.push_back(onePair.first);
+                    
+                    // Match more nodes along the path
+                    query(onePair.second, word, pos, candidate, result);
+
+                    // Match current node only.
+                    query(onePair.second, word, pos+1, candidate, result);
+                    candidate.pop_back();
+                }
+            }
+            else {
+                if (node->children.find(c) != node->children.end()) {
+                    candidate.push_back(c);
+                    query(node->children[c], word, pos+1, candidate, result);
+                    candidate.pop_back();
+                }
+            }
         }
     }
-
-private:
+    
     TrieNode * root;
 };
 

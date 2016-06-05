@@ -7,10 +7,13 @@
 #include "stack"
 #include <netinet/in.h>
 #include <unordered_set>
+#include <unordered_map>
 #include <list>
 #include <vector>
 #include <algorithm>
 #include <stack>
+#include <climits>
+#include <iostream>
 
 #include "test.h"
 
@@ -745,6 +748,46 @@ void zeroToRight(vector<int> & nums) {
 
 class Solution {
 public:
+    int minCut(string s) {
+        // write your code here
+        vector<int> dp(s.size()+1, INT_MAX);
+        dp[0] = -1;
+        vector<vector<bool>> isPal = checkPals(s);
+        // Stick to using index of s. 
+        for (int i = 0; i < s.size(); ++i) {
+            for (int j = 0; j <= i; ++j) {
+                if (isPal[j][i]) {
+                    dp[i+1] = min(dp[i+1], dp[j-1+1]+1);
+                    
+                    // Important optimization
+                    // 如果j == 0，那么整个string就是一个pal。那就不需要继续了。
+                    if (j == 0)
+                        break;
+                }
+            }
+        }
+        return dp.back();
+    }
+    
+    // Check palindromes for every i, j pair. 
+    vector<vector<bool>> checkPals(const string &s) {
+        vector<vector<bool>> isPal(s.size(), vector<bool>(s.size(), false));
+        for (int i = 0; i < s.size(); ++i) {
+            isPal[i][i] = true;
+            
+            // Need boundary check for i+1
+            if (i+1 < s.size() && s[i] == s[i+1])
+                isPal[i][i+1] = true;
+        }
+        
+        // 按间隔len来loop
+        for (int len = 2; len < s.size(); ++len) {
+            for (int i = 0; i + len < s.size(); ++i) {
+                if (s[i] == s[i+len] && isPal[i+1][i+len-1])
+                    isPal[i][i+len] = true;
+            }
+        }
+    }
 };
 
 /**
@@ -760,22 +803,89 @@ Query:
 "w*" => ["world", "winner"]
 "w*d" => world
 */
+struct TrieNode {
+    TrieNode() : isWord(false) {}
+    bool isWord;
+    unordered_map<char, TrieNode*> children;
+};
+
+class Dictionary {
+public:
+    Dictionary() {
+        root = new TrieNode;
+    }
+
+    void build(const vector<string> & wordList) {
+        for (auto & word : wordList) {
+            TrieNode * node = root;
+            
+            // The loop builds a word path from root to leaf. 
+            for (int i = 0; i < word.size(); ++i) {
+                char c = word[i];
+                if (node->children.find(c) == node->children.end()) {
+                    node->children[c] = new TrieNode;
+                }
+                node = node->children[c];
+            }
+            node->isWord = true;
+        }
+    }
+
+    vector<string> query(const string & word) {
+        string candidate;
+        vector<string> result;
+        query(root, word, 0, candidate, result);
+        return result;
+    }
+    
+private:
+    void query(TrieNode * node, const string & word, int pos, string & candidate, vector<string> & result) {
+        if (pos == word.size()) {
+            if (node->isWord)
+                result.push_back(candidate);
+        }
+        else {
+            char c = word[pos];
+            if (c == '*') {
+                for (auto & onePair : node->children) {
+                    candidate.push_back(onePair.first);
+                    
+                    // Match more nodes along the path
+                    query(onePair.second, word, pos, candidate, result);
+
+                    // Match current node only.
+                    query(onePair.second, word, pos+1, candidate, result);
+                    candidate.pop_back();
+                }
+            }
+            else {
+                if (node->children.find(c) != node->children.end()) {
+                    candidate.push_back(c);
+                    query(node->children[c], word, pos+1, candidate, result);
+                    candidate.pop_back();
+                }
+            }
+        }
+    }
+    
+    TrieNode * root;
+};
 
 int main()
 {
-    Solution sol;
-    /*
+//    Solution sol;
+
     Dictionary dict;
     vector<string> wordList = {"hello", "world", "winner", "would", "wd", "wdd", "find", "hand", "wind", "wake", "hot", "gate"};
     dict.build(wordList);
     vector<string> result;
-    result = dict.query("w*d");
-//    result = dict.query("hello");
+//    result = dict.query("w*d");
+    result = dict.query("hello");
     for (auto & word : result) {
         cout << word << " ";
     }
     cout << endl;
-    */
+    return 0;
     
     /*
     string start = "a";
