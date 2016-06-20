@@ -799,6 +799,9 @@ The query is a made of alphanumerical characters and at most one star character.
 The star character matches one or more alphanumerical character.
 We are interested in exact matches and not prefix matches. For example if the query is "hel", it won't match the word "hello".
 
+  A follow-up question, what if * matches 0 or more characters?
+  This is also implemented. See comments in code.
+  
 Words:
 ["hello", "world", "winner"]
 Query:
@@ -836,12 +839,18 @@ public:
     vector<string> query(const string & word) {
         string candidate;
         vector<string> result;
+        
         query(root, word, 0, candidate, result);
         return result;
     }
     
 private:
     void query(TrieNode * node, const string & word, int pos, string & candidate, vector<string> & result) {
+        /*
+        if (node == nullptr)
+            return;
+        */
+
         if (pos == word.size()) {
             if (node->isWord)
                 result.push_back(candidate);
@@ -849,23 +858,24 @@ private:
         else {
             char c = word[pos];
             if (c == '*') {
+                // Also make '*' match 0 char.
+                // But this should only be called once to
+                // avoid duplicate. So check this condition first.
+                // May also use a flag for this. 
+                if (candidate.size() == pos)
+                    query(node, word, pos+1, candidate, result);
+
                 for (auto & onePair : node->children) {
                     candidate.push_back(onePair.first);
-                    
-                    // Match more nodes along the path
-                    query(onePair.second, word, pos, candidate, result);
-
-                    // Match current node only.
                     query(onePair.second, word, pos+1, candidate, result);
+                    query(onePair.second, word, pos, candidate, result);
                     candidate.pop_back();
                 }
             }
-            else {
-                if (node->children.find(c) != node->children.end()) {
-                    candidate.push_back(c);
-                    query(node->children[c], word, pos+1, candidate, result);
-                    candidate.pop_back();
-                }
+            else if (node->children.find(c) != node->children.end()) {
+                candidate.push_back(c);
+                query(node->children[c], word, pos+1, candidate, result);
+                candidate.pop_back();
             }
         }
     }
@@ -878,18 +888,20 @@ int main()
     Solution sol;
 
     Dictionary dict;
-    vector<string> wordList = {"hello", "world", "winner", "would", "wd", "wdd", "find", "hand", "wind", "wake", "hot", "gate"};
+    vector<string> wordList = {"hello", "w", "world", "winner", "would", "wd", "wdd", "find", "hand", "wind", "wake", "hot", "gate"};
     dict.build(wordList);
     vector<string> result;
 //    result = dict.query("w*d");
-    result = dict.query("hello");
+//    result = dict.query("w*");
+    result = dict.query("he");    
+//    result = dict.query("hello");
     for (auto & word : result) {
         cout << word << " ";
     }
     cout << endl;
             
     return 0;
-    
+
     /*
     string start = "a";
     string end = "c";
