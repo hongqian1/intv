@@ -854,14 +854,19 @@ private:
             if (c == '*') {
                 // Also make '*' match 0 char.
                 // But this should only be called in the first time match to
-                // avoid duplicate. So check this condition first.
+                // avoid duplicate. The '*' may be used for the next char match
+                // and cause duplicate. So check this condition first.
                 // May also use a flag for this. 
                 if (candidate.size() == pos)
                     query(node, word, pos+1, candidate, result);
 
                 for (auto & onePair : node->children) {
                     candidate.push_back(onePair.first);
+                    
+                    // match one char only
                     query(onePair.second, word, pos+1, candidate, result);
+
+                    // continue to match next one. 
                     query(onePair.second, word, pos, candidate, result);
                     candidate.pop_back();
                 }
