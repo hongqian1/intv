@@ -808,6 +808,7 @@ Query:
 "w*" => ["world", "winner"]
 "w*d" => world
 */
+  
 struct TrieNode {
     TrieNode() : isWord(false) {}
     bool isWord;
@@ -825,8 +826,7 @@ public:
             TrieNode * node = root;
             
             // The loop builds a word path from root to leaf. 
-            for (int i = 0; i < word.size(); ++i) {
-                char c = word[i];
+            for (char c : word) {
                 if (node->children.find(c) == node->children.end()) {
                     node->children[c] = new TrieNode;
                 }
@@ -846,20 +846,14 @@ public:
     
 private:
     void query(TrieNode * node, const string & word, int pos, string & candidate, vector<string> & result) {
-        /*
-        if (node == nullptr)
-            return;
-        */
-
-        if (pos == word.size()) {
-            if (node->isWord)
-                result.push_back(candidate);
+        if (pos == word.size() && node->isWord) {
+            result.push_back(candidate);
         }
         else {
             char c = word[pos];
             if (c == '*') {
                 // Also make '*' match 0 char.
-                // But this should only be called once to
+                // But this should only be called in the first time match to
                 // avoid duplicate. So check this condition first.
                 // May also use a flag for this. 
                 if (candidate.size() == pos)
@@ -885,17 +879,16 @@ private:
 
 int main()
 {
-    Solution sol;
-
     Dictionary dict;
     vector<string> wordList = {"hello", "w", "world", "winner", "would", "wd", "wdd", "find", "hand", "wind", "wake", "hot", "gate"};
     dict.build(wordList);
+
     vector<string> result;
 //    result = dict.query("w*d");
 //    result = dict.query("w*");
-    result = dict.query("he");    
+    result = dict.query("hello");    
 //    result = dict.query("hello");
-    for (auto & word : result) {
+    for (auto &word : result) {
         cout << word << " ";
     }
     cout << endl;
