@@ -762,7 +762,7 @@ public:
                     dp[i+1] = min(dp[i+1], dp[j-1+1]+1);
                     
                     // Important optimization
-                    // 如果j == 0，那么整个string就是一个pal。那就不需要继续了。
+                    // 脠莽鹿没j == 0拢卢脛脟脙麓脮没赂枚string戮脥脢脟脪禄赂枚pal隆拢脛脟戮脥虏禄脨猫脪陋录脤脨酶脕脣隆拢
                     if (j == 0)
                         break;
                 }
@@ -782,7 +782,7 @@ public:
                 isPal[i][i+1] = true;
         }
         
-        // 按间隔len来loop
+        // 掳麓录盲赂么len脌麓loop
         for (int len = 2; len < s.size(); ++len) {
             for (int i = 0; i + len < s.size(); ++i) {
                 if (s[i] == s[i+len] && isPal[i+1][i+len-1])
@@ -882,8 +882,74 @@ private:
     TrieNode * root;
 };
 
+/*
+  Airbnb
+  given a list of word, output all pair of words that can be formed as a palindrome
+  Question:
+  Is dup allowed?
+  Need check duplicates in answer and input? Ask.
+  It should OK to have dup in input because dup could also a palindrome. 
+  Implement a basic version first. Then worry about duplicates.
+
+  It is also possible that the input is a hash table of words. Then no need to
+  worry about duplicates. 
+ */
+bool isPal(const string &word) {
+    for (int start = 0, end = word.size() - 1; start < end; ++start, --end) {
+        if (word[start] != word[end])
+            return false;
+    }
+    return true;
+}
+
+vector<pair<string, string>> wordPairs(const vector<string> &words) {
+    unordered_map<string, string> palMap;
+    vector<pair<string, string>> result;
+//    unordered_set<string> visited;
+    for (auto & w : words) {
+        /*
+        if (visited.count(w))
+            continue;
+        else
+            visited.insert(w);
+        */
+        
+        // check if the word is in the map.
+        // only checks the later words. This is OK.
+        // It is also to check outside this loop. 
+        if (palMap.count(w)) {
+            result.emplace_back(palMap[w], w);
+            palMap.erase(w); // need remove it to avoid dup
+        }
+        
+        string rw = w;
+        reverse(rw.begin(), rw.end());
+        // match the reverse word at the right side
+        for (int i = 0; i < rw.size(); ++i) {
+            //string pal = rw.substr(i);
+            string pal(rw, i);
+            // use w, not rw!
+            if (i == 0 || i == 1 || isPal(w+pal)) {
+                palMap[pal] = w;
+            }
+        }
+
+        // match the reverse word at the left side
+        // No need to match the first one because it was done above. 
+        for (int i = 1; i < rw.size(); ++i) {
+//            string pal = rw.substr(0, rw.size() - i);
+            string pal(rw, 0, rw.size() - i);
+            // use w, not rw!
+            if (i == 1 || isPal(pal+w))
+                palMap[pal] = w;
+        }
+    }
+    return result;
+}
+
 int main()
 {
+    /*
     Dictionary dict;
     vector<string> wordList = {"hello", "w", "world", "winner", "would", "wd", "wdd", "find", "hand", "wind", "wake", "hot", "gate"};
     dict.build(wordList);
@@ -897,7 +963,15 @@ int main()
         cout << word << " ";
     }
     cout << endl;
-            
+    return 0;
+    */
+
+    vector<string> words({"abc", "kbbk", "ba", "kb", "kbb", "cba", "cc", "ba", "cb", "bbk"});
+    vector<pair<string, string>> palPairs = wordPairs(words);
+    for (auto &onePair : palPairs) {
+        cout << onePair.first << " " << onePair.second << endl;
+    }
+    
     return 0;
 
     /*
