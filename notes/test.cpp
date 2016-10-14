@@ -863,7 +863,7 @@ private:
                 for (auto & onePair : node->children) {
                     candidate.push_back(onePair.first);
                     
-                    // match one char only
+                    // match one char only. It is also needed for matching more.
                     query(onePair.second, word, pos+1, candidate, result);
 
                     // continue to match next one. 

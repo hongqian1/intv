@@ -1856,7 +1856,7 @@ vector<vector<string>> findAllPairs(const unordered_set<string> & dict) {
         // here. Added dedup code. It is not required in the interview though.
         for (int j=0; j<2; ++j) {
             if (j == 1)
-                reverseStr(str); 
+                reversStr(str); 
                 
             for (int i=0; i<str.size(); ++i) {
                 // remove dup in the second loop as discussed above.

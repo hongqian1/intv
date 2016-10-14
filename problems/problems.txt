@@ -1,0 +1,4 @@
+1. Given a sorted array of integers, find kth smallest square of the integer.
+   Google phone interview. 
+   Must use O(log N) complexity. But do not need implement O(log N).
+   Explain to the interviewer. 
